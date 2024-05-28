@@ -5,10 +5,9 @@ from langchain.memory import VectorStoreRetrieverMemory
 from langchain.retrievers import TimeWeightedVectorStoreRetriever
 from prompt_config import system_prompt
 
-current_script_path = Path(__file__).resolve().parent
-current_script_path = os.path.dirname(current_script_path)
-current_script_path = os.path.join(current_script_path, "VLM")
-faiss_index_path = os.path.join(current_script_path, "faiss_index")
+# current directory
+faiss_index_path = os.getcwd()
+faiss_index_path = os.path.join(faiss_index_path, "faiss_index")
 from langchain.chains.constitutional_ai.base import ConstitutionalChain
 from langchain.chains.constitutional_ai.models import ConstitutionalPrinciple
 from langchain.chains.llm import LLMChain

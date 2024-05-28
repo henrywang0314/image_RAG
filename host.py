@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import BaseModel
 from main import embedding_storage, RAG_pipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
-
+import os
 model_id = "vikhyatk/moondream2"
 revision = "2024-05-20"
 
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     # Load the Moondream model
     llm["moondream_model"] = AutoModelForCausalLM.from_pretrained(
         model_id, trust_remote_code=True, revision=revision,
-        torch_dtype=torch.float16, attn_implementation="flash_attention_2"
+        torch_dtype=torch.float16
     ).to("cuda")
     # Load the embedding model from langchain
     llm["embedding_llm"] = HuggingFaceEmbeddings(
@@ -40,6 +40,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
 
 @app.post("/process_image")
 async def process_image(file: UploadFile = File(...)):
@@ -49,7 +52,12 @@ async def process_image(file: UploadFile = File(...)):
     # print(enc_image.shape)
     description = llm["moondream_model"].answer_question(enc_image, "Describe this image.", tokenizer)
     embedding_storage(llm["embedding_llm"], description)
-    with open("C:\\Users\\11305064\\Documents\\VScode_Project\\VLM\\faiss_index\\description.txt", "a") as f:
+
+        # current directory
+    directory_path = os.getcwd()
+    directory_path = os.path.join(directory_path, "faiss_index")
+    description_path = os.path.join(directory_path, "description.txt")
+    with open(description_path, "a") as f:
         f.write(description + '\n')
     return {"description": description}
 
